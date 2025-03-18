@@ -1,0 +1,39 @@
+services:
+  node-app:
+    build:
+      context: .
+    depends_on:
+      - postgres-db
+    restart: "always"
+    container_name: node-application
+    environment:
+      DB_HOST: postgres-db
+      DB_USER: adebayo
+      DB_PASS: basit
+      DB_NAME: postgres
+      DB_PORT: 5432
+      PORT: 5002
+    ports:
+      - 2030:5002
+    volumes:
+      - .:/www/app
+    networks:
+      - altsch-network
+  postgres-db:
+    image: postgres:17.2
+    container_name: node-postgres
+    ports:
+      -5030:5432
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: adebayo
+      POSTGRES_PASSWORD: basit
+    ports:
+      - 8080:5432
+    networks:
+      - altsch-network
+
+networks:
+  altsch-network:
+    name: altsch-network
+    driver: bridge
