@@ -2,16 +2,16 @@ name: Deployment to EC2 server
 on:
   push:
     branches:
-      - main
+      # - main
       # - "feat/**"
-      # - develop
+      - develop
 
 env:
   AWS_REGION: "eu-west-1"
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  AWS_ECR_REGISTRY: 779846817754.dkr.ecr.eu-west-3.amazonaws.com
-  AWS_ECR_REPOSITORY: node-app
+  AWS_ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+  AWS_ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -52,7 +52,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.AWS_ECR_REGISTRY }}/${{ env.AWS_ECR_REPOSITORY }}:latest
+          tags: ${{ env.AWS_ECR_REGISTRY }}/${{ env.AWS_ECR_REPOSITORY }}:${{ github.sha }}
   deploy_to_staging:
     needs: [build]
     runs-on: ubuntu-latest
