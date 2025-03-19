@@ -57,19 +57,19 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to EC2 54.74.153.110 ⏳
+      - name: Deploy to EC2 35.180.128.195 ⏳
         uses: appleboy/ssh-action@master
-        if: github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/main'
         with:
           host: ${{ secrets.SSH_STAGING_HOST }}
           username: ${{ secrets.ALT_SSH_USER }}
           password: ${{ secrets.SSH_STAGING_SECRET }}
           script: |
             set -ex
-            export IMAGE_TAG=${{ github.sha }}
-            cd ~/api
-            aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ env.AWS_ECR_REGISTRY }}
-            docker compose pull api
+            export IMAGE_TAG=latest
+            cd ~/alt-sch
+            aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin ${{ env.AWS_ECR_REGISTRY }}
+            docker compose pull node-app
             docker compose down -v --remove-orphans
-            docker compose up -d --force-recreate api
+            docker compose up -d --force-recreate node-app
             docker image prune -af
