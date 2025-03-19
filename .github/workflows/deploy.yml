@@ -2,9 +2,9 @@ name: Deployment to EC2 server
 on:
   push:
     branches:
-      # - main
+      - main
       # - "feat/**"
-      - develop
+      # - develop
 
 env:
   AWS_REGION: "eu-west-1"
