@@ -1,0 +1,75 @@
+name: Deployment to EC2 server
+on:
+  push:
+    branches:
+      # - main
+      # - "feat/**"
+      - develop
+
+env:
+  AWS_REGION: "eu-west-1"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+  AWS_ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+  # Deployment workflow
+  # build docker image of my code
+  # 1. build my code
+  # 2. push my built image to a docker registry
+  #
+  # deploy my code
+  # 3. login into a server
+  # 4. pull the docker image i pushed in step 2
+  # 5. run docker-compose commands
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.AWS_ECR_REGISTRY }}/${{ env.AWS_ECR_REPOSITORY }}:latest
+  deploy_to_staging:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2 54.74.153.110 ⏳
+        uses: appleboy/ssh-action@master
+        if: github.ref == 'refs/heads/develop'
+        with:
+          host: ${{ secrets.SSH_STAGING_HOST }}
+          username: ${{ secrets.ALT_SSH_USER }}
+          password: ${{ secrets.SSH_STAGING_SECRET }}
+          script: |
+            set -ex
+            export IMAGE_TAG=${{ github.sha }}
+            cd ~/api
+            aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ env.AWS_ECR_REGISTRY }}
+            docker compose pull api
+            docker compose down -v --remove-orphans
+            docker compose up -d --force-recreate api
+            docker image prune -af
