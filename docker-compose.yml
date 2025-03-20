@@ -25,6 +25,7 @@ services:
     container_name: node-postgres
     # ports:
     #   -5030:5432
+    #  this was commented out because there are two of it present
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: adebayo
