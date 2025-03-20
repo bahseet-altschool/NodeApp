@@ -12,6 +12,9 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
   AWS_ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
+  SSH_STAGING_HOST: 13.37.211.189""
+  ALT_SSH_USER: "ubuntu"
+  SSH_STAGING_SECRET: "adebayo"
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -61,9 +64,10 @@ jobs:
         uses: appleboy/ssh-action@master
         if: github.ref == 'refs/heads/main'
         with:
-          host: ${{ secrets.SSH_STAGING_HOST }}
-          username: ${{ secrets.ALT_SSH_USER }}
-          password: ${{ secrets.SSH_STAGING_SECRET }}
+          host: ${{ env.SSH_STAGING_HOST }}
+          username: ${{ env.ALT_SSH_USER }}
+          password: ${{ env.SSH_STAGING_SECRET }}
+          # note that the 'env.' should be 'secrets' and its values should be saved on github actions secrets not inside the environment variables here.
           script: |
             set -ex
             export IMAGE_TAG=latest
