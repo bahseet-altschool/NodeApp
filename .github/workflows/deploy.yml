@@ -73,7 +73,7 @@ jobs:
             export IMAGE_TAG=latest
             cd ~/alt-sch
             aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin ${{ env.AWS_ECR_REGISTRY }}
-            docker compose pull node-app
+            docker compose pull node-app                     ## suppose to be ... node-app:$IMAGE_TAG
             docker compose down -v --remove-orphans
             docker compose up -d --force-recreate node-app
             docker image prune -af
